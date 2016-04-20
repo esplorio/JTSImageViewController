@@ -467,8 +467,13 @@ typedef struct {
         }
     }
 
+    NSBundle *bundle = [NSBundle bundleForClass:[JTSImageViewController class]];
+    NSURL *url = [bundle URLForResource:@"JTSImageViewController" withExtension:@"bundle"];
+    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+
     self.closeButton = [UIButton new];
-    [self.closeButton setImage:[UIImage imageNamed:@"close"] forState:UIControlStateNormal];
+    UIImage *closeImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Close" ofType:@"png"]];
+    [self.closeButton setImage:closeImage forState:UIControlStateNormal];
     self.closeButton.translatesAutoresizingMaskIntoConstraints = false;
     [self.closeButton addTarget:self action:@selector(dismiss:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.closeButton];
@@ -560,7 +565,6 @@ typedef struct {
     self.timeBackground = [UIView new];
     self.timeBackground.backgroundColor = RGB(234, 239, 246);
     self.timeBackground.layer.cornerRadius = 12.5;
-
     self.timeBackground.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.timeBackground];
 
