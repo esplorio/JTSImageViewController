@@ -583,10 +583,14 @@ typedef struct {
     [self.view addSubview:self.splitterView];
 
     self.detailLabel = [UILabel new];
-    self.detailLabel.numberOfLines = 3;
+    self.detailLabel.numberOfLines = 0;
     self.detailLabel.textColor = [UIColor whiteColor];
-    self.detailLabel.text = self.imageInfo.detailText;
     self.detailLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:12];
+    CGRect detailTextRect = [self.imageInfo.detailText boundingRectWithSize:CGSizeMake(self.view.frame.size.width, CGFLOAT_MAX)
+                                                                    options:NSStringDrawingUsesLineFragmentOrigin
+                                                                    attributes:@{NSFontAttributeName: self.detailLabel.font}
+                                                                    context:nil];
+    self.detailLabel.text = self.imageInfo.detailText;
     self.detailLabel.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.detailLabel];
 
@@ -724,19 +728,12 @@ typedef struct {
                                                              multiplier:1.0
                                                                constant:0],
                                  [NSLayoutConstraint constraintWithItem:self.detailLabel
-                                                              attribute:NSLayoutAttributeHeight
-                                                              relatedBy:NSLayoutRelationGreaterThanOrEqual
-                                                                 toItem:nil
-                                                              attribute:NSLayoutAttributeNotAnAttribute
-                                                             multiplier:1.0
-                                                               constant:60],
-                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
-                                                              attribute:NSLayoutAttributeBottom
+                                                              attribute:NSLayoutAttributeTop
                                                               relatedBy:NSLayoutRelationLessThanOrEqual
                                                                  toItem:self.view
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:-4],
+                                                               constant:-(4+MAX(60.0, detailTextRect.size.height))],
                                  [NSLayoutConstraint constraintWithItem:self.detailLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
