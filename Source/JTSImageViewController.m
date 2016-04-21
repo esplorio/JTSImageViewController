@@ -547,7 +547,7 @@ typedef struct {
 - (void)setupDetailViews {
 
     self.titleLabel = [UILabel new];
-    self.titleLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:13];
+    self.titleLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:14];
     self.titleLabel.text = self.imageInfo.title;
     self.titleLabel.textColor = [UIColor whiteColor];
     self.titleLabel.translatesAutoresizingMaskIntoConstraints = false;
@@ -557,7 +557,7 @@ typedef struct {
     self.dateLabel = [UILabel new];
     self.dateLabel.text = self.imageInfo.dateText;
     self.dateLabel.textColor = RGB(221, 221, 221);
-    self.dateLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:9];
+    self.dateLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:10];
     self.dateLabel.translatesAutoresizingMaskIntoConstraints = false;
     self.dateLabel.numberOfLines = 1;
     [self.view addSubview:self.dateLabel];
@@ -586,7 +586,7 @@ typedef struct {
     self.detailLabel.numberOfLines = 3;
     self.detailLabel.textColor = [UIColor whiteColor];
     self.detailLabel.text = self.imageInfo.detailText;
-    self.detailLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:11];
+    self.detailLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:12];
     self.detailLabel.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.detailLabel];
 
