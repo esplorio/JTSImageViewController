@@ -717,11 +717,11 @@ typedef struct {
                                                                constant:0],
                                  [NSLayoutConstraint constraintWithItem:self.detailLabel
                                                               attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
+                                                              relatedBy:NSLayoutRelationLessThanOrEqual
                                                                  toItem:self.view
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:-4],
+                                                               constant:-60],
                                  [NSLayoutConstraint constraintWithItem:self.detailLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
