@@ -590,6 +590,15 @@ typedef struct {
     self.detailLabel.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.detailLabel];
 
+    if (!self.imageInfo.detailText && !self.imageInfo.timeText && !self.imageInfo.dateText && !self.imageInfo.title) {
+        self.titleLabel.hidden = YES;
+        self.dateLabel.hidden = YES;
+        self.splitterView.hidden = YES;
+        self.detailLabel.hidden = YES;
+        self.closeButton.hidden = YES;
+        self.timeBackground.hidden = YES;
+    }
+
     [self.view addConstraints: @[
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
                                                               attribute:NSLayoutAttributeBottom
