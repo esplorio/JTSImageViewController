@@ -725,7 +725,7 @@ typedef struct {
                                                                constant:0],
                                  [NSLayoutConstraint constraintWithItem:self.detailLabel
                                                               attribute:NSLayoutAttributeHeight
-                                                              relatedBy:NSLayoutRelationMoreThanOrEqual
+                                                              relatedBy:NSLayoutRelationGreaterThanOrEqual
                                                                  toItem:nil
                                                               attribute:NSLayoutAttributeNotAnAttribute
                                                              multiplier:1.0
