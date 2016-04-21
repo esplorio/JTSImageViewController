@@ -685,7 +685,7 @@ typedef struct {
                                                                  toItem:nil
                                                               attribute:NSLayoutAttributeNotAnAttribute
                                                              multiplier:1.0
-                                                               constant:1],
+                                                               constant:0.5],
                                  [NSLayoutConstraint constraintWithItem:self.splitterView
                                                               attribute:NSLayoutAttributeLeft
                                                               relatedBy:NSLayoutRelationEqual
