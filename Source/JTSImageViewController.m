@@ -595,7 +595,6 @@ typedef struct {
         self.dateLabel.hidden = YES;
         self.splitterView.hidden = YES;
         self.detailLabel.hidden = YES;
-        self.closeButton.hidden = YES;
         self.timeBackground.hidden = YES;
     }
 
