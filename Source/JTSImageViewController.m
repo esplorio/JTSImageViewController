@@ -107,7 +107,6 @@ typedef struct {
 @property (strong, nonatomic) UILabel *detailLabel;
 @property (strong, nonatomic) UIView *splitterView;
 @property (strong, nonatomic) UIButton *closeButton;
-@property (strong, nonatomic) UIView *timeBackground;
 
 // Gesture Recognizers
 @property (strong, nonatomic) UITapGestureRecognizer *singleTapperPhoto;
@@ -561,12 +560,6 @@ typedef struct {
     self.dateLabel.numberOfLines = 1;
     [self.view addSubview:self.dateLabel];
 
-    self.timeBackground = [UIView new];
-    self.timeBackground.backgroundColor = RGB(234, 239, 246);
-    self.timeBackground.layer.cornerRadius = 12.5;
-    self.timeBackground.translatesAutoresizingMaskIntoConstraints = false;
-    [self.view addSubview:self.timeBackground];
-
     self.splitterView = [UIView new];
     self.splitterView.backgroundColor = [UIColor whiteColor];
     self.splitterView.translatesAutoresizingMaskIntoConstraints = false;
@@ -589,7 +582,6 @@ typedef struct {
         self.dateLabel.hidden = YES;
         self.splitterView.hidden = YES;
         self.detailLabel.hidden = YES;
-        self.timeBackground.hidden = YES;
     }
 
     [self.view addConstraints: @[
@@ -636,22 +628,6 @@ typedef struct {
                                                               attribute:NSLayoutAttributeLeft
                                                              multiplier:1.0
                                                                constant:-8],
-                                 //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeRight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeRight
-                                                             multiplier:1.0
-                                                               constant:-8],
-                                 [NSLayoutConstraint constraintWithItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.splitterView
-                                                              attribute:NSLayoutAttributeTop
-                                                             multiplier:1.0
-                                                               constant:-7],
-
                                  //-----------------------------------------------------
                                  [NSLayoutConstraint constraintWithItem:self.splitterView
                                                               attribute:NSLayoutAttributeHeight
@@ -1888,7 +1864,6 @@ typedef struct {
         self.splitterView.alpha = newAlpha;
         self.detailLabel.alpha = newAlpha;
         self.closeButton.alpha = newAlpha;
-        self.timeBackground.alpha = newAlpha;
     }];
 
 }
