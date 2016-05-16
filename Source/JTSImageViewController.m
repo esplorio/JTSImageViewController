@@ -107,7 +107,6 @@ typedef struct {
 @property (strong, nonatomic) UILabel *detailLabel;
 @property (strong, nonatomic) UIView *splitterView;
 @property (strong, nonatomic) UIButton *closeButton;
-@property (strong, nonatomic) UILabel *timeLabel;
 @property (strong, nonatomic) UIView *timeBackground;
 
 // Gesture Recognizers
@@ -568,15 +567,6 @@ typedef struct {
     self.timeBackground.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.timeBackground];
 
-    self.timeLabel = [UILabel new];
-    self.timeLabel.textColor = RGB(63, 68, 72);
-    self.timeLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:11];
-    self.timeLabel.textAlignment = NSTextAlignmentCenter;
-    self.timeLabel.text = self.imageInfo.timeText;
-    self.timeLabel.translatesAutoresizingMaskIntoConstraints = false;
-    [self.timeLabel setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-    [self.timeBackground addSubview:self.timeLabel];
-
     self.splitterView = [UIView new];
     self.splitterView.backgroundColor = [UIColor whiteColor];
     self.splitterView.translatesAutoresizingMaskIntoConstraints = false;
@@ -594,7 +584,7 @@ typedef struct {
     self.detailLabel.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.detailLabel];
 
-    if (!self.imageInfo.detailText && !self.imageInfo.timeText && !self.imageInfo.dateText && !self.imageInfo.title) {
+    if (!self.imageInfo.detailText && !self.imageInfo.dateText && !self.imageInfo.title) {
         self.titleLabel.hidden = YES;
         self.dateLabel.hidden = YES;
         self.splitterView.hidden = YES;
@@ -604,12 +594,12 @@ typedef struct {
 
     [self.view addConstraints: @[
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
-                                                              attribute:NSLayoutAttributeBottom
+                                                              attribute:NSLayoutAttributeTop
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.dateLabel
+                                                                 toItem:self.view
                                                               attribute:NSLayoutAttributeTop
                                                              multiplier:1.0
-                                                               constant:-4],
+                                                               constant:13],
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
                                                               attribute:NSLayoutAttributeLeft
                                                               relatedBy:NSLayoutRelationEqual
@@ -620,7 +610,7 @@ typedef struct {
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
+                                                                 toItem:self.closeButton
                                                               attribute:NSLayoutAttributeLeft
                                                              multiplier:1.0
                                                                constant:-8],
@@ -633,16 +623,16 @@ typedef struct {
                                                              multiplier:1.0
                                                                constant:0],
                                  [NSLayoutConstraint constraintWithItem:self.dateLabel
-                                                              attribute:NSLayoutAttributeBottom
+                                                              attribute:NSLayoutAttributeTop
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.splitterView
+                                                                 toItem:self.titleLabel
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:-4],
+                                                               constant:5],
                                  [NSLayoutConstraint constraintWithItem:self.dateLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
+                                                                 toItem:self.closeButton
                                                               attribute:NSLayoutAttributeLeft
                                                              multiplier:1.0
                                                                constant:-8],
@@ -661,35 +651,7 @@ typedef struct {
                                                               attribute:NSLayoutAttributeTop
                                                              multiplier:1.0
                                                                constant:-7],
-                                 //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeTop
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeTop
-                                                             multiplier:1.0
-                                                               constant:5],
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0
-                                                               constant:-5],
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeLeft
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeLeft
-                                                             multiplier:1.0
-                                                               constant:9],
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeRight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeRight
-                                                             multiplier:1.0
-                                                               constant:-9],
+
                                  //-----------------------------------------------------
                                  [NSLayoutConstraint constraintWithItem:self.splitterView
                                                               attribute:NSLayoutAttributeHeight
