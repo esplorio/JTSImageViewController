@@ -149,6 +149,7 @@ typedef struct {
         _currentSnapshotRotationTransform = CGAffineTransformIdentity;
         _mode = mode;
         _backgroundOptions = backgroundOptions;
+
         if (_mode == JTSImageViewControllerMode_Image) {
             [self setupImageAndDownloadIfNecessary:imageInfo];
         }
@@ -546,19 +547,23 @@ typedef struct {
     NSURL *url = [bundle URLForResource:@"JTSImageViewController" withExtension:@"bundle"];
     NSBundle *imageBundle = [NSBundle bundleWithURL:url];
 
-    self.shareButton = [UIButton new];
-    UIImage *shareImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Share" ofType:@"png"]];
-    [self.shareButton setImage:shareImage forState:UIControlStateNormal];
-    self.shareButton.translatesAutoresizingMaskIntoConstraints = false;
-    [self.shareButton addTarget:self action:@selector(didTapShare) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.shareButton];
+    if (self.imageInfo.shareCallback) {
+        self.shareButton = [UIButton new];
+        UIImage *shareImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Share" ofType:@"png"]];
+        [self.shareButton setImage:shareImage forState:UIControlStateNormal];
+        self.shareButton.translatesAutoresizingMaskIntoConstraints = false;
+        [self.shareButton addTarget:self action:@selector(didTapShare) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:self.shareButton];
+    }
 
-    self.moreButton = [UIButton new];
-    UIImage *closeImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Extra" ofType:@"png"]];
-    [self.moreButton setImage:closeImage forState:UIControlStateNormal];
-    self.moreButton.translatesAutoresizingMaskIntoConstraints = false;
-    [self.moreButton addTarget:self action:@selector(didTapMore) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:self.moreButton];
+    if (self.imageInfo.moreCallback) {
+        self.moreButton = [UIButton new];
+        UIImage *closeImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Extra" ofType:@"png"]];
+        [self.moreButton setImage:closeImage forState:UIControlStateNormal];
+        self.moreButton.translatesAutoresizingMaskIntoConstraints = false;
+        [self.moreButton addTarget:self action:@selector(didTapMore) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:self.moreButton];
+    }
 
     if (!self.imageInfo.detailText && !self.imageInfo.dateText && !self.imageInfo.title) {
         self.titleLabel.hidden = YES;
@@ -566,6 +571,8 @@ typedef struct {
         self.splitterView.hidden = YES;
         self.detailLabel.hidden = YES;
     }
+
+
 
     [self.view addConstraints: @[
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
@@ -658,73 +665,106 @@ typedef struct {
                                  [NSLayoutConstraint constraintWithItem:self.splitterView
                                                               attribute:NSLayoutAttributeBottom
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.shareButton
-                                                              attribute:NSLayoutAttributeTop
-                                                             multiplier:1.0
-                                                               constant:-4],
-                                 //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.shareButton
-                                                              attribute:NSLayoutAttributeRight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.moreButton
-                                                              attribute:NSLayoutAttributeLeft
-                                                             multiplier:1.0
-                                                               constant:0],
-                                 [NSLayoutConstraint constraintWithItem:self.shareButton
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
+                                                                 toItem:self.self.view
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:0],
-                                 [NSLayoutConstraint constraintWithItem:self.shareButton
-                                                              attribute:NSLayoutAttributeHeight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:nil
-                                                              attribute:NSLayoutAttributeNotAnAttribute
-                                                             multiplier:0
-                                                               constant:44],
-                                 [NSLayoutConstraint constraintWithItem:self.shareButton
-                                                              attribute:NSLayoutAttributeWidth
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:nil
-                                                              attribute:NSLayoutAttributeNotAnAttribute
-                                                             multiplier:0
-                                                               constant:44],
-                                 //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.moreButton
-                                                              attribute:NSLayoutAttributeRight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeRight
-                                                             multiplier:1.0
-                                                               constant:0],
-                                 [NSLayoutConstraint constraintWithItem:self.moreButton
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.view
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0
-                                                               constant:0],
-                                 [NSLayoutConstraint constraintWithItem:self.moreButton
-                                                              attribute:NSLayoutAttributeHeight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:nil
-                                                              attribute:NSLayoutAttributeNotAnAttribute
-                                                             multiplier:0
-                                                               constant:44],
-                                 [NSLayoutConstraint constraintWithItem:self.moreButton
-                                                              attribute:NSLayoutAttributeWidth
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:nil
-                                                              attribute:NSLayoutAttributeNotAnAttribute
-                                                             multiplier:0
-                                                               constant:44],
+                                                               constant:(self.moreButton || self.shareButton) ? -48 : 1], //if no buttons are visible we hide the splitter beneath the screen
                                  ]];
+
+    if (self.moreButton) {
+        [self.view addConstraints:@[
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.view
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeHeight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeWidth
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    ]];
+    }
+
+    if (self.shareButton) {
+        [self.view addConstraints:@[
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.view
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeHeight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeWidth
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    ]];
+    }
+
+    if (self.moreButton && self.shareButton) {
+        [self.view addConstraints:@[
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeRight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeLeft
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeRight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.view
+                                                                 attribute:NSLayoutAttributeRight
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    ]];
+    }
+
+    if (self.moreButton && !self.shareButton) {
+        [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.moreButton
+                                                              attribute:NSLayoutAttributeRight
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:self.view
+                                                              attribute:NSLayoutAttributeRight
+                                                             multiplier:1.0
+                                                               constant:0]];
+    }
+
+    if (self.shareButton && !self.moreButton) {
+        [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.shareButton
+                                                              attribute:NSLayoutAttributeRight
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:self.view
+                                                              attribute:NSLayoutAttributeRight
+                                                             multiplier:1.0
+                                                               constant:0]];
+    }
 }
 
 - (void)viewDidLoadForAltTextMode {
-    
+
     self.view.backgroundColor = [UIColor blackColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     
