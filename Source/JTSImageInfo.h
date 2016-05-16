@@ -16,7 +16,6 @@
 @property (copy, nonatomic) NSURL *canonicalImageURL; // since `imageURL` might be a filesystem URL from the local cache.
 @property (copy, nonatomic) NSString *altText;
 @property (copy, nonatomic) NSString *dateText;
-@property (copy, nonatomic) NSString *timeText;
 @property (copy, nonatomic) NSString *detailText;
 @property (copy, nonatomic) NSString *title;
 @property (assign, nonatomic) CGRect referenceRect;
@@ -24,7 +23,8 @@
 @property (assign, nonatomic) UIViewContentMode referenceContentMode;
 @property (assign, nonatomic) CGFloat referenceCornerRadius;
 @property (copy, nonatomic) NSMutableDictionary *userInfo;
-
+@property (strong, nonatomic) void (^shareCallback)();
+@property (strong, nonatomic) void (^moreCallback)();
 - (NSString *)displayableTitleAltTextSummary;
 - (NSString *)combinedTitleAndAltText;
 - (CGPoint)referenceRectCenter;

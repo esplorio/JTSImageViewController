@@ -107,8 +107,8 @@ typedef struct {
 @property (strong, nonatomic) UILabel *detailLabel;
 @property (strong, nonatomic) UIView *splitterView;
 @property (strong, nonatomic) UIButton *closeButton;
-@property (strong, nonatomic) UILabel *timeLabel;
-@property (strong, nonatomic) UIView *timeBackground;
+@property (strong, nonatomic) UIButton *shareButton;
+@property (strong, nonatomic) UIButton *moreButton;
 
 // Gesture Recognizers
 @property (strong, nonatomic) UITapGestureRecognizer *singleTapperPhoto;
@@ -149,6 +149,7 @@ typedef struct {
         _currentSnapshotRotationTransform = CGAffineTransformIdentity;
         _mode = mode;
         _backgroundOptions = backgroundOptions;
+
         if (_mode == JTSImageViewControllerMode_Image) {
             [self setupImageAndDownloadIfNecessary:imageInfo];
         }
@@ -172,40 +173,6 @@ typedef struct {
         }
     } else if (self.mode == JTSImageViewControllerMode_AltText) {
         [self showAltTextFromViewController:viewController];
-    }
-}
-
-- (void)dismiss:(BOOL)animated {
-    
-    // Early Return!
-    if (_flags.isPresented == NO) {
-        return;
-    }
-    
-    _flags.isPresented = NO;
-    
-    if (self.mode == JTSImageViewControllerMode_AltText) {
-        [self dismissByExpandingAltTextToOffscreenPosition];
-    }
-    else if (self.mode == JTSImageViewControllerMode_Image) {
-        
-        if (_flags.imageIsFlickingAwayForDismissal) {
-            [self dismissByCleaningUpAfterImageWasFlickedOffscreen];
-        }
-        else if (self.transition == JTSImageViewControllerTransition_FromOffscreen) {
-            [self dismissByExpandingImageToOffscreenPosition];
-        }
-        else {
-            BOOL startingRectForThumbnailIsNonZero = (CGRectEqualToRect(CGRectZero, _startingInfo.startingReferenceFrameForThumbnail) == NO);
-            BOOL useCollapsingThumbnailStyle = (startingRectForThumbnailIsNonZero
-                                                && self.image != nil
-                                                && self.transition != JTSImageViewControllerTransition_FromOffscreen);
-            if (useCollapsingThumbnailStyle) {
-                [self dismissByCollapsingImageBackToOriginalPosition];
-            } else {
-                [self dismissByExpandingImageToOffscreenPosition];
-            }
-        }
     }
 }
 
@@ -562,21 +529,6 @@ typedef struct {
     self.dateLabel.numberOfLines = 1;
     [self.view addSubview:self.dateLabel];
 
-    self.timeBackground = [UIView new];
-    self.timeBackground.backgroundColor = RGB(234, 239, 246);
-    self.timeBackground.layer.cornerRadius = 12.5;
-    self.timeBackground.translatesAutoresizingMaskIntoConstraints = false;
-    [self.view addSubview:self.timeBackground];
-
-    self.timeLabel = [UILabel new];
-    self.timeLabel.textColor = RGB(63, 68, 72);
-    self.timeLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:11];
-    self.timeLabel.textAlignment = NSTextAlignmentCenter;
-    self.timeLabel.text = self.imageInfo.timeText;
-    self.timeLabel.translatesAutoresizingMaskIntoConstraints = false;
-    [self.timeLabel setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-    [self.timeBackground addSubview:self.timeLabel];
-
     self.splitterView = [UIView new];
     self.splitterView.backgroundColor = [UIColor whiteColor];
     self.splitterView.translatesAutoresizingMaskIntoConstraints = false;
@@ -586,30 +538,50 @@ typedef struct {
     self.detailLabel.numberOfLines = 0;
     self.detailLabel.textColor = [UIColor whiteColor];
     self.detailLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:12];
-    CGRect detailTextRect = [self.imageInfo.detailText boundingRectWithSize:CGSizeMake(self.view.frame.size.width, CGFLOAT_MAX)
-                                                                    options:NSStringDrawingUsesLineFragmentOrigin
-                                                                    attributes:@{NSFontAttributeName: self.detailLabel.font}
-                                                                    context:nil];
+
     self.detailLabel.text = self.imageInfo.detailText;
     self.detailLabel.translatesAutoresizingMaskIntoConstraints = false;
     [self.view addSubview:self.detailLabel];
 
-    if (!self.imageInfo.detailText && !self.imageInfo.timeText && !self.imageInfo.dateText && !self.imageInfo.title) {
+    NSBundle *bundle = [NSBundle bundleForClass:[JTSImageViewController class]];
+    NSURL *url = [bundle URLForResource:@"JTSImageViewController" withExtension:@"bundle"];
+    NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+
+    if (self.imageInfo.shareCallback) {
+        self.shareButton = [UIButton new];
+        UIImage *shareImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Share" ofType:@"png"]];
+        [self.shareButton setImage:shareImage forState:UIControlStateNormal];
+        self.shareButton.translatesAutoresizingMaskIntoConstraints = false;
+        [self.shareButton addTarget:self action:@selector(didTapShare) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:self.shareButton];
+    }
+
+    if (self.imageInfo.moreCallback) {
+        self.moreButton = [UIButton new];
+        UIImage *closeImage = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:@"Extra" ofType:@"png"]];
+        [self.moreButton setImage:closeImage forState:UIControlStateNormal];
+        self.moreButton.translatesAutoresizingMaskIntoConstraints = false;
+        [self.moreButton addTarget:self action:@selector(didTapMore) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:self.moreButton];
+    }
+
+    if (!self.imageInfo.detailText && !self.imageInfo.dateText && !self.imageInfo.title) {
         self.titleLabel.hidden = YES;
         self.dateLabel.hidden = YES;
         self.splitterView.hidden = YES;
         self.detailLabel.hidden = YES;
-        self.timeBackground.hidden = YES;
     }
+
+
 
     [self.view addConstraints: @[
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
-                                                              attribute:NSLayoutAttributeBottom
+                                                              attribute:NSLayoutAttributeTop
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.dateLabel
+                                                                 toItem:self.view
                                                               attribute:NSLayoutAttributeTop
                                                              multiplier:1.0
-                                                               constant:-4],
+                                                               constant:13],
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
                                                               attribute:NSLayoutAttributeLeft
                                                               relatedBy:NSLayoutRelationEqual
@@ -620,7 +592,7 @@ typedef struct {
                                  [NSLayoutConstraint constraintWithItem:self.titleLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
+                                                                 toItem:self.closeButton
                                                               attribute:NSLayoutAttributeLeft
                                                              multiplier:1.0
                                                                constant:-8],
@@ -633,63 +605,41 @@ typedef struct {
                                                              multiplier:1.0
                                                                constant:0],
                                  [NSLayoutConstraint constraintWithItem:self.dateLabel
-                                                              attribute:NSLayoutAttributeBottom
+                                                              attribute:NSLayoutAttributeTop
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.splitterView
+                                                                 toItem:self.titleLabel
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:-4],
+                                                               constant:5],
                                  [NSLayoutConstraint constraintWithItem:self.dateLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
+                                                                 toItem:self.closeButton
                                                               attribute:NSLayoutAttributeLeft
                                                              multiplier:1.0
                                                                constant:-8],
                                  //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.timeBackground
+                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
+                                                              attribute:NSLayoutAttributeLeft
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:self.titleLabel
+                                                              attribute:NSLayoutAttributeLeft
+                                                             multiplier:1.0
+                                                               constant:0],
+                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
+                                                              attribute:NSLayoutAttributeBottom
+                                                              relatedBy:NSLayoutRelationLessThanOrEqual
+                                                                 toItem:self.splitterView
+                                                              attribute:NSLayoutAttributeTop
+                                                             multiplier:1.0
+                                                               constant:-4],
+                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
                                                                  toItem:self.view
                                                               attribute:NSLayoutAttributeRight
                                                              multiplier:1.0
                                                                constant:-8],
-                                 [NSLayoutConstraint constraintWithItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.splitterView
-                                                              attribute:NSLayoutAttributeTop
-                                                             multiplier:1.0
-                                                               constant:-7],
-                                 //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeTop
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeTop
-                                                             multiplier:1.0
-                                                               constant:5],
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeBottom
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeBottom
-                                                             multiplier:1.0
-                                                               constant:-5],
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeLeft
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeLeft
-                                                             multiplier:1.0
-                                                               constant:9],
-                                 [NSLayoutConstraint constraintWithItem:self.timeLabel
-                                                              attribute:NSLayoutAttributeRight
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.timeBackground
-                                                              attribute:NSLayoutAttributeRight
-                                                             multiplier:1.0
-                                                               constant:-9],
                                  //-----------------------------------------------------
                                  [NSLayoutConstraint constraintWithItem:self.splitterView
                                                               attribute:NSLayoutAttributeHeight
@@ -715,37 +665,106 @@ typedef struct {
                                  [NSLayoutConstraint constraintWithItem:self.splitterView
                                                               attribute:NSLayoutAttributeBottom
                                                               relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.detailLabel
-                                                              attribute:NSLayoutAttributeTop
-                                                             multiplier:1.0
-                                                               constant:-4],
-                                 //-----------------------------------------------------
-                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
-                                                              attribute:NSLayoutAttributeLeft
-                                                              relatedBy:NSLayoutRelationEqual
-                                                                 toItem:self.titleLabel
-                                                              attribute:NSLayoutAttributeLeft
-                                                             multiplier:1.0
-                                                               constant:0],
-                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
-                                                              attribute:NSLayoutAttributeTop
-                                                              relatedBy:NSLayoutRelationLessThanOrEqual
-                                                                 toItem:self.view
+                                                                 toItem:self.self.view
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:-(4+MAX(60.0, detailTextRect.size.height))],
-                                 [NSLayoutConstraint constraintWithItem:self.detailLabel
+                                                               constant:(self.moreButton || self.shareButton) ? -48 : 1], //if no buttons are visible we hide the splitter beneath the screen
+                                 ]];
+
+    if (self.moreButton) {
+        [self.view addConstraints:@[
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.view
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeHeight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeWidth
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    ]];
+    }
+
+    if (self.shareButton) {
+        [self.view addConstraints:@[
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.view
+                                                                 attribute:NSLayoutAttributeBottom
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeHeight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeWidth
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:nil
+                                                                 attribute:NSLayoutAttributeNotAnAttribute
+                                                                multiplier:0
+                                                                  constant:44],
+                                    ]];
+    }
+
+    if (self.moreButton && self.shareButton) {
+        [self.view addConstraints:@[
+                                    [NSLayoutConstraint constraintWithItem:self.shareButton
+                                                                 attribute:NSLayoutAttributeRight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeLeft
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    [NSLayoutConstraint constraintWithItem:self.moreButton
+                                                                 attribute:NSLayoutAttributeRight
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:self.view
+                                                                 attribute:NSLayoutAttributeRight
+                                                                multiplier:1.0
+                                                                  constant:0],
+                                    ]];
+    }
+
+    if (self.moreButton && !self.shareButton) {
+        [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.moreButton
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
                                                                  toItem:self.view
                                                               attribute:NSLayoutAttributeRight
                                                              multiplier:1.0
-                                                               constant:-8],
-                                 ]];
+                                                               constant:0]];
+    }
+
+    if (self.shareButton && !self.moreButton) {
+        [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.shareButton
+                                                              attribute:NSLayoutAttributeRight
+                                                              relatedBy:NSLayoutRelationEqual
+                                                                 toItem:self.view
+                                                              attribute:NSLayoutAttributeRight
+                                                             multiplier:1.0
+                                                               constant:0]];
+    }
 }
 
 - (void)viewDidLoadForAltTextMode {
-    
+
     self.view.backgroundColor = [UIColor blackColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     
@@ -1926,7 +1945,8 @@ typedef struct {
         self.splitterView.alpha = newAlpha;
         self.detailLabel.alpha = newAlpha;
         self.closeButton.alpha = newAlpha;
-        self.timeBackground.alpha = newAlpha;
+        self.shareButton.alpha = newAlpha;
+        self.moreButton.alpha = newAlpha;
     }];
 
 }
@@ -2232,6 +2252,56 @@ typedef struct {
     
     return hint;
 }
+
+#pragma mark - Action
+
+- (void)didTapShare {
+  if (self.imageInfo.shareCallback) {
+    self.imageInfo.shareCallback();
+  }
+}
+
+- (void)didTapMore {
+  if (self.imageInfo.moreCallback) {
+    self.imageInfo.moreCallback();
+  }
+}
+
+- (void)dismiss:(BOOL)animated {
+
+  // Early Return!
+  if (_flags.isPresented == NO) {
+    return;
+  }
+
+  _flags.isPresented = NO;
+
+  if (self.mode == JTSImageViewControllerMode_AltText) {
+    [self dismissByExpandingAltTextToOffscreenPosition];
+  }
+  else if (self.mode == JTSImageViewControllerMode_Image) {
+
+    if (_flags.imageIsFlickingAwayForDismissal) {
+      [self dismissByCleaningUpAfterImageWasFlickedOffscreen];
+    }
+    else if (self.transition == JTSImageViewControllerTransition_FromOffscreen) {
+      [self dismissByExpandingImageToOffscreenPosition];
+    }
+    else {
+      BOOL startingRectForThumbnailIsNonZero = (CGRectEqualToRect(CGRectZero, _startingInfo.startingReferenceFrameForThumbnail) == NO);
+      BOOL useCollapsingThumbnailStyle = (startingRectForThumbnailIsNonZero
+                                          && self.image != nil
+                                          && self.transition != JTSImageViewControllerTransition_FromOffscreen);
+      if (useCollapsingThumbnailStyle) {
+        [self dismissByCollapsingImageBackToOriginalPosition];
+      } else {
+        [self dismissByExpandingImageToOffscreenPosition];
+      }
+    }
+  }
+}
+
+
 
 @end
 
