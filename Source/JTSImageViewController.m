@@ -610,7 +610,7 @@ typedef struct {
                                                                  toItem:self.titleLabel
                                                               attribute:NSLayoutAttributeBottom
                                                              multiplier:1.0
-                                                               constant:5],
+                                                               constant:0],
                                  [NSLayoutConstraint constraintWithItem:self.dateLabel
                                                               attribute:NSLayoutAttributeRight
                                                               relatedBy:NSLayoutRelationEqual
