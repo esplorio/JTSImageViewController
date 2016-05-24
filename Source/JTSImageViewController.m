@@ -538,6 +538,7 @@ typedef struct {
     self.detailLabel.numberOfLines = 0;
     self.detailLabel.textColor = [UIColor whiteColor];
     self.detailLabel.font = [UIFont fontWithName:@"Avenir-Roman" size:12];
+    self.detailLabel.shadowColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0];
 
     self.detailLabel.text = self.imageInfo.detailText;
     self.detailLabel.translatesAutoresizingMaskIntoConstraints = false;
